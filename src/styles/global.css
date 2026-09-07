@@ -170,7 +170,7 @@
 	font-family: var(--font-mono);
 	font-size: var(--rail-date-size);
 	color: hsl(var(--theme-text) / 0.72);
-	letter-spacing: -0.01em;
+	letter-spacing: 0;
 	line-height: var(--rail-date-lh);
 	white-space: nowrap;
 	font-weight: 500;
@@ -203,7 +203,8 @@
 	font-size: 18.5px;
 	color: hsl(var(--theme-text));
 	line-height: 1.3;
-	letter-spacing: -0.012em;
+	letter-spacing: normal;
+	word-spacing: 0.02em;
 	margin: 0 0 6px;
 	text-wrap: balance;
 	word-wrap: break-word;
@@ -305,7 +306,8 @@ ul.work-list .name {
 	font-family: var(--font-serif);
 	font-size: 21px;
 	font-weight: 600;
-	letter-spacing: -0.012em;
+	letter-spacing: normal;
+	word-spacing: 0.02em;
 	color: hsl(var(--theme-text));
 	transition: color 0.2s ease;
 	word-wrap: break-word;
@@ -332,6 +334,14 @@ ul.work-list .badge {
 	padding: 2px 8px;
 	border-radius: 2px;
 	margin-left: auto;
+}
+ul.work-list .timeline-range {
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	color: hsl(var(--theme-text) / 0.62);
+	margin: 2px 0 6px;
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum";
 }
 ul.work-list p {
 	font-size: 16px;

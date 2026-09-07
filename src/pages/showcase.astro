@@ -1,5 +1,5 @@
 ---
-import { showcase } from "@/data/showcase";
+import { formatShowcaseTimeline, showcase } from "@/data/showcase";
 import PageLayout from "@/layouts/Base.astro";
 import { Schema } from "astro-seo-schema";
 
@@ -43,6 +43,11 @@ const siteUrl = (path: string) => new URL(path, Astro.site).toString();
 								<span class="stack">{item.stack}</span>
 								{item.badge && <span class="badge">{item.badge}</span>}
 							</div>
+							{item.startDate && item.endDate && (
+								<div class="timeline-range">
+									{formatShowcaseTimeline(item.startDate, item.endDate)}
+								</div>
+							)}
 							<p>{item.desc}</p>
 						</a>
 					</li>

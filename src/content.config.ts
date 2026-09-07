@@ -19,7 +19,14 @@ const post = defineCollection({
 				})
 				.optional(),
 			description: z.string().min(10).max(160),
-			draft: z.boolean().default(false),
+			draft: z
+				.boolean()
+				.or(
+					z
+						.string()
+						.transform((val) => val.toLowerCase() === "true")
+				)
+				.default(false),
 			ogImage: z.string().optional(),
 			publishDate: z
 				.string()

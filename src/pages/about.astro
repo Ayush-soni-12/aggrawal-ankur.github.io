@@ -61,6 +61,20 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 <PageLayout meta={meta}>
 	<section class="about" aria-labelledby="about-label">
 		<div class="section-label" id="about-label">About</div>
+		{
+			profile?.avatar && (
+				<div class="avatar-wrap">
+					<img
+						src={profile.avatar}
+						alt={authorName}
+						class="author-avatar"
+						width="96"
+						height="96"
+						loading="eager"
+					/>
+				</div>
+			)
+		}
 		<div class="bio">
 			<Content />
 		</div>
@@ -71,10 +85,29 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 	.about {
 		margin-bottom: 64px;
 	}
+	.avatar-wrap {
+		margin-bottom: 28px;
+		display: block;
+	}
+	.author-avatar {
+		width: 96px;
+		height: 96px;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 1.5px solid var(--hairline);
+		background-color: var(--paper);
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+		transition: border-color 0.25s ease, transform 0.25s ease;
+	}
+	.author-avatar:hover {
+		border-color: hsl(var(--theme-accent));
+		transform: scale(1.03);
+	}
 	.bio {
 		font-family: var(--font-serif);
 		font-size: 17.5px;
 		line-height: 1.75;
+		word-spacing: 0.04em;
 		color: hsl(var(--theme-text));
 		max-width: var(--reading-width);
 	}
@@ -125,6 +158,13 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 		}
 	}
 	@media (max-width: 420px) {
+		.author-avatar {
+			width: 80px;
+			height: 80px;
+		}
+		.avatar-wrap {
+			margin-bottom: 22px;
+		}
 		.bio {
 			font-size: 16.5px;
 		}

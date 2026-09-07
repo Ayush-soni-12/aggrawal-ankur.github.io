@@ -18,6 +18,24 @@ const archiveCount = allPosts.length;
 
 const profile = siteConfig.profile;
 const siteUrl = (path: string) => absoluteUrl(path, Astro.site);
+
+interface SocialLink {
+	href: string;
+	label: string;
+	rel?: string;
+	target?: string;
+}
+
+const socialLinks: SocialLink[] = [];
+if (profile?.github) {
+	socialLinks.push({ href: profile.github, label: "GitHub", rel: "noreferrer", target: "_blank" });
+}
+if (profile?.linkedin) {
+	socialLinks.push({ href: profile.linkedin, label: "LinkedIn", rel: "noreferrer", target: "_blank" });
+}
+if (profile?.email) {
+	socialLinks.push({ href: `mailto:${profile.email}`, label: "Email" });
+}
 ---
 
 <Schema
@@ -56,25 +74,16 @@ const siteUrl = (path: string) => absoluteUrl(path, Astro.site);
 	<section class="hero">
 		<p>{siteConfig.description}</p>
 		<div class="socials">
-			{profile?.github && (
-				<>
-					<a href={profile.github} rel="noreferrer" target="_blank">GitHub</a>
-					<span class="sep">·</span>
-				</>
-			)}
-			{profile?.linkedin && (
-				<>
-					<a href={profile.linkedin} rel="noreferrer" target="_blank">LinkedIn</a>
-					<span class="sep">·</span>
-				</>
-			)}
-			{profile?.email && (
-				<>
-					<a href={`mailto:${profile.email}`}>Email</a>
-					<span class="sep">·</span>
-				</>
-			)}
-			<a href={withBase("/rss.xml")}>RSS</a>
+			{
+				socialLinks.map((item, index) => (
+					<>
+						<a href={item.href} target={item.target} rel={item.rel}>
+							{item.label}
+						</a>
+						{index < socialLinks.length - 1 && <span class="sep">·</span>}
+					</>
+				))
+			}
 		</div>
 	</section>
 
@@ -216,7 +225,8 @@ const siteUrl = (path: string) => absoluteUrl(path, Astro.site);
 		font-size: 30px;
 		line-height: 1.14;
 		margin-bottom: 14px;
-		letter-spacing: -0.02em;
+		letter-spacing: normal;
+		word-spacing: 0.02em;
 	}
 	.post.featured .post-excerpt {
 		font-size: 18px;
@@ -319,7 +329,8 @@ const siteUrl = (path: string) => absoluteUrl(path, Astro.site);
 		.post.featured .post-title {
 			font-size: 22px;
 			line-height: 1.2;
-			letter-spacing: -0.015em;
+			letter-spacing: normal;
+			word-spacing: 0.02em;
 			margin-bottom: 10px;
 		}
 		.post.featured .post-excerpt {
