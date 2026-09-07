@@ -17,6 +17,14 @@ Below is a list of the changes made to this site, along with the commit where ea
 | - | ------ | ------ | ------ |
 | 1 | A menu named "Site Credits" is added to the navbar to acknowledge the people behind this website. | [f03c9e2a](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/f03c9e2a6d4c274d01c82d548fe0d23f86434acf) | Ankur |
 | 2 | A "WELCOME" is added in the Home page. | [65023f72](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/65023f725aa9482fc106d2f24fc89fcd9ffd07a7) | Ankur |
+| 3 | Remove RSS both in the home page and footer. | [2daeec1c](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/2daeec1cb1a8870d29f14da9c2ec8fbbe7ac48c1) | Ayush |
+| 4 | An option to add the photograph of the author in the About section. It is not mandatory. | [d6442049](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/d644204935dbf794ad6b76b3b13c7b4be5d7a025),  | Ayush |
+| 5 | Text in a blockquote is italic by default. That didn't appealed much to me. Now the text is normal and bold/italics is optional. | [d460abcd](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/d460abcda667b4c32bc46007d25a77cdf11dbf90) | Ayush |
+| 6 | A timeline and duration (in days) calculated from the timeline is added to showcase. | [93f3e543](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/93f3e5436d70f1b599e19d94e2e4b1b33c65971a), | Ayush |
+| 7 | Changed the first letter in posts from big to normal. | [48ecfdaa](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/48ecfdaa35b43cf03b6bd987db84cb33f6d139f5) | Ayush |
+| 8 | The space between words was quite less, so changed that. | [382f3be8](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/382f3be8e76ae696d2432a136bee06c0aa1e711f) | Ayush |
+| 9 | Support for draft pages so that I don't have to maintain a separate directory for drafts. | [6189f2ce](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/6189f2ce2a3ebf563227e727ed599856cc16ce5d) | Ayush |
+| 10 | A CSS rendering issue in the site-credits page that doesn't render tables and blockquote properly. | [aa083d37](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/aa083d37bf28d851e9d90af83ae42883f1bbf490), []() | Ayush |
 
 You can check out their work here:
 
