@@ -26,3 +26,4 @@
 24. Containers
 25. Type Qualifiers
 26. How format specifiers work?
+27. Why stack is fast and heap is slow?
