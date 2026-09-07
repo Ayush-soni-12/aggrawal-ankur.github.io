@@ -41,8 +41,8 @@ export const showcase: ShowcaseItem[] = [
 		name: "glibc-malloc-expedition",
 		href: "https://github.com/aggrawal-ankur/glibc-malloc-expedition",
 		stack: "C · GDB",
-		startDate: "2026-05-5",
-		endDate: "2026-09-05",
+		startDate: "2026-02-27",
+		endDate: "2026-08-09",
 		badge: "DONE",
 		desc: "A systems investigation of the virtual memory allocator in glibc-2.43, approached from first principles. Explored fundamental data structures and concepts including malloc_chunk, bins, malloc_state, and tcache. Followed a source → hypothesis → experiment → verification approach, producing annotated source code, in-depth design notes, and small reproducible experiments, along with a Docker-based environment."
 	},
