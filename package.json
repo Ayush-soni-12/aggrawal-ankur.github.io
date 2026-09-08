@@ -7,9 +7,10 @@
 	"type": "module",
 	"packageManager": "pnpm@10.19.0",
 	"scripts": {
-		"dev": "astro dev",
+		"clean": "rm -rf dist .astro .cache .vite",
+		"dev": "pnpm run clean && astro dev",
 		"start": "astro dev",
-		"build": "astro check && astro build",
+		"build": "pnpm run clean && astro check && astro build",
 		"postbuild": "pagefind --site dist",
 		"preview": "astro preview",
 		"lint": "biome lint .",
