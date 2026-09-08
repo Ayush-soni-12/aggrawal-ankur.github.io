@@ -25,6 +25,8 @@ Below is a list of the changes made to this site, along with the commit where ea
 | 8 | The space between words was quite less, so changed that. | [382f3be8](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/382f3be8e76ae696d2432a136bee06c0aa1e711f) | Ayush |
 | 9 | Support for draft pages so that I don't have to maintain a separate directory for drafts. | [6189f2ce](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/6189f2ce2a3ebf563227e727ed599856cc16ce5d) | Ayush |
 | 10 | A CSS rendering issue in the site-credits page that doesn't render tables and blockquote properly. | [aa083d37](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/aa083d37bf28d851e9d90af83ae42883f1bbf490), []() | Ayush |
+| 11 | Added a command in package.json to clean the stuff built by `build` and updated `dev` and `build` commands to run it. | [b45f79f2](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/b45f79f2) | Ankur |
+| 12 | Renamed `build` to `build_prod_site` and `preview` to `check_prod_site`. It's a better naming for me. | [bb3ab0b3](https://github.com/aggrawal-ankur/aggrawal-ankur.github.io/commit/bb3ab0b3) | Ankur |
 
 You can check out their work here:
 
