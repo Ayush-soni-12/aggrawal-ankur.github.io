@@ -38,9 +38,9 @@ jobs:
         with:
           enablement: true
 
-      # `pnpm build` runs `astro check && astro build`, then the
+      # `pnpm build_prod_site` runs `pnpm run clean && astro check && astro build`, then the
       # `postbuild` script runs pagefind over dist/.
-      - run: pnpm build
+      - run: pnpm build_prod_site
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
