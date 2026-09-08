@@ -5,7 +5,7 @@ description: ""
 tags: [ c-to-asm ]
 --- -->
 
-There are 4 things associated with an identifier in C.
+There are 4 things associated with a C variable.
 
 1. **Scope:** Where the identifier is available to be accessed?
    1. The block it is declared in?
@@ -21,7 +21,7 @@ There are 4 things associated with an identifier in C.
    1. Until the program execution is in the block the identifier is declared in?
    2. Until the program executes?
 
-4. **Initial State:** What value does the identifier identities when it is not initialized?
+4. **Initial State:** What is the initial value of the object if no explicit initializer is provided?
 
 These things are explained by storage classes. Every identifier has a storage class, but not all identifiers have a storage class specifier in their declaration.
 
@@ -33,23 +33,23 @@ Below is a description of these storage class specifiers.
 
 | Storage Class Specifier | Scope (Availability) | Storage Location | Storage Duration | Linkage | Value if no initializer is provided |
 | :---------------------- | :------------------- | :--------------- | :--------------- | :------ | :---------------------------------- |
-| `auto` | Block scope | Automatically chosen by the compiler. More on this later. | As long as the execution is in the block the variable is defined in. | None | [?] |
-| `reg`  | | A register | | None | |
-| `static` | *Block scope* when used with an identifier present in a block; *File scope* when used with an identifier present globally in the file. | Typically `.data` (if initialized); `.bss` (if uninitialized, or zero-initialized) in ELF implementation. | For the entire execution of the program. | *None* for block-static; *Internal* for file static identifiers. | 0 |
-| `extern` | Program-wide | Typically `.data` (if initialized); `.bss` (if uninitialized, or zero-initialized) in ELF implementation. | For the entire execution of the program. | External | 0 |
+| `auto` | Block scope | Automatic storage. More on this later. | As long as the execution is in the block the variable is defined in. | None | Indeterminate |
+| `register`  | [?] | A register | [?] | None | Indeterminate |
+| `static` | *Block scope* when used with an identifier present in a block; *File scope* when used with an identifier present globally in the file. | Typically `.data` (if initialized), or `.bss` (if uninitialized, or zero-initialized) in ELF. | For the entire execution of the program. | *None* for block-static and *Internal* for file-static identifiers. | 0 |
+| `extern` | Program-wide | Typically `.data` (if initialized), or `.bss` (if uninitialized, or zero-initialized) in ELF. | For the entire execution of the program. | External | 0 |
 
 ## Notes
 
-1. `auto` is implicit, which is why no one specifies it. Therefore, `{auto int x = 45;}` and are `{int x = 45;}` are the same things.
-2. `reg` is only a hint to the compiler. The compiler may still put the value in memory.
-3. When the compiler does use register when hinted with `reg`, the address of that identifier can not be taken, meaning (&) can not be used with it.
-4. The situation of `extern` is quite complicated, so it is better discussed separately later.
+1. `auto` is implicit, which is why no one specifies it. Therefore, `{auto int x = 45;}` and `{int x = 45;}` are the same things.
+2. `register` is only a hint to the compiler. The compiler may still put the value in memory.
+3. When the compiler does use a register when hinted with `register`, the address of that identifier can not be taken, meaning (&) can not be used with it.
+4. The description of `extern` is not accurate because the situation of `extern` is quite complicated, so it is better discussed separately later.
 
 ---
 
 The table is loaded with information, and to understand it, we need a starting point.
 
-A bare minimum declaration contains an identifier and it's type. We can deduce where it is declared in by seeing the surrounding code. A declaration doesn't advertizes any of the properties by itself. Therefore, the location of the declaration is the right starting point.
+A bare minimum declaration contains an identifier and its type. We can deduce where it is declared in by seeing the surrounding code. A declaration doesn't advertize any of the properties by itself. Therefore, the location of the declaration is the right starting point.
 
 ## Block-level declaration
 
@@ -129,9 +129,40 @@ It is reasonable to ask why the compiler doesn't do what a programmer can do man
   - To adjust rsp after each block, the compiler has to keep track of the total allocation size in every block.
   - Dynamic stack allocation, or VLAs, further complicates this.
 
----
+## extern
 
-There is another storage class, called `_Thread_local`. I have not covered it here as I don't understand threads and concurrency yet. It will be updated in future.
+**Note: I am not confident about this section. I expect corrections from people with more experience.**
+
+I am not able to understand how should I perceive `extern`.
+
+This is what the c-std says in point 5, on page 36, under section 6.2.2 Linkages of identifiers.
+```
+If the declaration of an identifier for an object has file scope and
+does not contain the storage-class specifier static or constexpr, its 
+linkage is external.
+```
+
+`{auto int x = 4;}` and `{int x = 4;}` are exactly the same things. However, x1 and x2 in the example below aren't.
+```c
+#include <stdio.h>
+
+int x1;
+extern int x2;
+
+int main(void);
+```
+  - `x1` is an identifier that is globally available (external linkage) in all the TUs that constitute the final program.
+  - `x2` is an identifier that is declared in a different TU. To use it in this TU, we have to sort of redeclare it with `extern` in this TU. The `extern` tells the compiler it is a symbol with external linkage defined somewhere, so don't create a new symbol.
+
+The usage of `extern` doesn't match with `auto` or `static`. It is not implicitly available, unlike `auto`.
+
+## Things I have not covered.
+
+While reading the ISO/IEC 9889:2024 standard draft, I found that `constexpr` and `typedef` are storage class specifiers too. I am honestly surprised and a little confused.
+
+There is another storage class, called `thread_local`. Since I don't understand threads and concurrency yet, I can not verify anything, and I don't have any plans to explore this subsystem.
+
+I may update these in future.
 
 ## Open Questions
 
@@ -145,5 +176,6 @@ They might be unusual or strange, but I'd like to explore them in future.
 
 # References
 
-https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3220.pdf
-https://en.cppreference.com/c/language/storage_duration
+1. [ISO/IEC 9889:2024 Draft](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3220.pdf)
+
+2. [Storage-class specifiers on cppreference.com](https://en.cppreference.com/c/language/storage_duration)
