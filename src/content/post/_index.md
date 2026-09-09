@@ -2,6 +2,7 @@
 title: "Title"
 publishDate: 2026-09-09
 description: "Description"
+draft: true
 tags: [ c-to-asm ]
 ---
 
