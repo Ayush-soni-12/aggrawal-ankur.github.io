@@ -1,9 +1,9 @@
-<!-- ---
-title: ""
-publishDate: 2026-M-D
-description: ""
+---
+title: "Title"
+publishDate: 2026-09-09
+description: "Description"
 tags: [ c-to-asm ]
---- -->
+---
 
 ## Note for the readers
 
