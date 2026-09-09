@@ -194,6 +194,247 @@ It is reasonable to ask why the compiler doesn't do what a programmer can do man
   - To adjust rsp after each block, the compiler has to keep track of the total allocation size in every block.
   - Dynamic stack allocation, or VLAs, further complicates this.
 
+---
+
+To solidify our understanding, here are a few examples.
+
+## Examples
+
+To compile C to x64-assembly, we will use GCC with the following flags.
+```bash
+$ gcc main.c -S -o main.s -masm=intel -fno-ident -fno-asynchronous-unwind-tables -fno-dwarf2-cfi-asm
+```
+
+The flags are used to generate a clean assembly:
+  - `-masm=intel` instructs GCC to generate intel syntax assembly, although the directives remain GAS (GNU as) specific.
+  - `-fno-ident` disables the generation of .ident assembler directives.
+  - `-fno-asynchronous-unwind-tables` disables the generation of the .eh_frame section in the binary.
+  - `-fno-dwarf2-cfi-asm` tells the compiler to omit DWARF2 Call Frame Information (CFI) assembler directives (.cfi_startproc, .cfi_endproc, etc.).
+
+### #1. Automatic Storage
+
+```c
+#include <stdio.h>
+
+int main(void){
+  int num = 4;
+  printf("num %d\n", num);
+}
+```
+
+Assembly at -O0:
+```nasm
+	.text
+	.section	.rodata
+.LC0:
+	.string	"num %d\n"
+
+	.text
+	.globl	main
+	.type	main, @function
+main:
+	push rbp
+	mov  rbp, rsp
+	sub  rsp, 16
+
+	mov  DWORD PTR -4[rbp], 4
+	mov  eax, DWORD PTR -4[rbp]
+	mov  esi, eax        ; arg3
+	lea  rax, .LC0[rip]
+	mov  rdi, rax        ; arg2
+	mov  eax, 0          ; arg1
+	call printf@PLT
+
+	mov  eax, 0
+	leave
+	ret
+```
+  - Stack is used.
+
+Assembly at -O1:
+```nasm
+	.text
+	.section	.rodata.str1.1,"aMS",@progbits,1
+.LC0:
+	.string	"num %d\n"
+
+	.text
+	.globl	main
+	.type	main, @function
+main:
+	sub	rsp, 8
+	mov	esi, 4            ; arg3
+	lea	rdi, .LC0[rip]    ; arg2
+	mov	eax, 0            ; arg1
+	call	printf@PLT
+
+	mov	eax, 0
+	add	rsp, 8
+	ret
+```
+  - Register is used.
+
+### #2. Register
+
+**Expectation**: We can not uses the "address of" operator on a variable with the register storage class.
+```c
+#include <stdio.h>
+
+int main(void){
+  register int num = 4;
+  printf("num %p\n", &num);
+}
+```
+
+Output of compilation:
+```
+test.c: In function ‘main’:
+test.c:5:3: error: address of register variable ‘num’ requested
+    5 |   printf("num %p\n", &num);
+      |   ^~~~~~
+```
+
+### #3. Uninitialized block statics.
+
+**Expectation**: `num` will be given storage in the .bss section and initialized to zero.
+```c
+#include <stdio.h>
+
+int main(void){
+  static int num;
+  printf("num (without an initializer): %d\n", num);
+}
+```
+
+Generated assembly:
+```nasm
+	.text
+	.section  .rodata
+	.align 8
+.LC0:
+	.string	"num (without an initializer): %d\n"
+
+	.text
+	.globl main
+	.type	 main, @function
+
+main:
+	push rbp
+	mov  rbp, rsp
+
+	mov eax, DWORD PTR num.0[rip]
+	mov esi, eax          ; arg3
+	lea	rax, .LC0[rip]
+	mov	rdi, rax          ; arg2
+	mov	eax, 0            ; arg1
+	call	printf@PLT
+
+	mov  eax, 0
+	pop  rbp
+	ret
+
+	.local num.0
+	.comm  num.0, 4, 4
+```
+
+The output:
+```
+num (without an initializer): 0
+```
+
+[INSERT an explanation of .local and .comm directives]
+
+Why there is no `.section .bss`? That requires section switching. [EXPLAIN THIS].
+
+### #4. Initialized Block Statics
+
+**Expectation**: `num` will be given storage in the .data section and initialized with 45.
+```c
+#include <stdio.h>
+
+int main(void){
+	static int num = 45;
+}
+```
+
+This is the assembly:
+```nasm
+main:
+	push rbp
+	mov  rbp, rsp
+	mov  eax, 0
+	pop  rbp
+	ret
+
+	.data
+	.align 4
+	.type  num.0, @object
+	.size  num.0, 4
+num.0:
+	.long	45
+```
+
+Why .data is present here? No segment switching? [EXPLANATION]
+
+### #5. Zero-initialized Block Statics
+
+**Expectation**: `num` will be given storage in the .bss section as it is zero-initialized.
+
+Compile both the files.
+```c
+/* uninitialized.c */
+#include <stdio.h>
+
+int main(void){
+  static int num;
+}
+```
+
+```c
+/* zero-initialized.c */
+#include <stdio.h>
+
+int main(void){
+  static int num = 0;
+}
+```
+
+The output will be exactly the same. Use `diff` if you want.
+
+This is the assembly:
+```nasm
+main:
+	push rbp
+	mov  rbp, rsp
+	mov  eax, 0
+	pop  rbp
+	ret
+
+	.local	num.0
+	.comm	num.0, 4, 4
+```
+
+### #6. Symbol Visibility
+
+```c
+#include <stdio.h>
+
+int num1;
+static int num2;
+
+int main(void){
+  int num3 = 4;
+  printf("num3: %d\n", num3);
+}
+```
+
+```bash
+→ readelf test -s | grep num 
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+    12: 0000000000004020     4 OBJECT  LOCAL  DEFAULT   25 num2
+    29: 000000000000401c     4 OBJECT  GLOBAL DEFAULT   25 num1
+```
+
 ## Things I have not covered.
 
 While reading the ISO/IEC 9889:2024 standard draft, I found that `constexpr` and `typedef` are storage class specifiers too. I am honestly surprised and a little confused.
