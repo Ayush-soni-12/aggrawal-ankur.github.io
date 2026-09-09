@@ -5,23 +5,33 @@ description: ""
 tags: [ c-to-asm ]
 --- -->
 
+## Note for the readers
+
+***This writing uses intuitive definitions to understand this topic. Some terminology may not be formally specified by the official C standard, in which case, it is clearly mentioned.***
+
+***This writing is based on the ISO/IEC 9889:2024 (C23) draft.***
+
+***This is a complex topic with edge cases. If you think that a fact is inaccurately represented, or the writing doesn't uphold the standards it is claiming, the author warmly welcomes all the suggestions and corrections. The communication can be done via Email, LinkedIn, or GitHub Discussions.***
+
+---
+
 There are 4 things associated with a C variable.
 
-1. **Scope:** Where the identifier is available to be accessed?
+1. **Scope:** *Where is the identifier available to be accessed?*
    1. The block it is declared in?
    2. The translation unit (TU) it is present in?
    3. All the translation units that constitute the program?
 
-2. **Storage Location:** Where in the memory the identifier will be given the storage?
-   1. **Stack**: per-function storage, which is allocated/freed upon the creation/completion of a function.
-   2. **Static**: static storage, where the duration is equal to the program's execution.
-   3. **Heap**: storage allocated dynamically by a virtual memory allocator, like malloc in glibc.
+2. **Storage Location:** *Where in the memory the identifier will be given the storage?*
+   1. **Stack**: It is a per-function storage, allocated/freed upon the creation/completion of a function.
+   2. **Static Storage**: It's a storage with a duration equal to the program's execution.
 
-3. **Storage Duration:** How long the identifier should exist?
+3. **Storage Duration:** *How long the storage associated with an identifier should exist in memory?*
    1. Until the program execution is in the block the identifier is declared in?
    2. Until the program executes?
+   3. Should it correspond one-to-one with the scope, or be an independent property?
 
-4. **Initial State:** What is the initial value of the object if no explicit initializer is provided?
+4. **Initial State:** *What is the initial value of the object if no initializer is provided?*
 
 These things are explained by storage classes. Every identifier has a storage class, but not all identifiers have a storage class specifier in their declaration.
 
@@ -34,85 +44,139 @@ Below is a description of these storage class specifiers.
 | Storage Class Specifier | Scope (Availability) | Storage Location | Storage Duration | Linkage | Value if no initializer is provided |
 | :---------------------- | :------------------- | :--------------- | :--------------- | :------ | :---------------------------------- |
 | `auto` | Block scope | Automatic storage. More on this later. | As long as the execution is in the block the variable is defined in. | None | Indeterminate |
-| `register`  | [?] | A register | [?] | None | Indeterminate |
-| `static` | *Block scope* when used with an identifier present in a block; *File scope* when used with an identifier present globally in the file. | Typically `.data` (if initialized), or `.bss` (if uninitialized, or zero-initialized) in ELF. | For the entire execution of the program. | *None* for block-static and *Internal* for file-static identifiers. | 0 |
-| `extern` | Program-wide | Typically `.data` (if initialized), or `.bss` (if uninitialized, or zero-initialized) in ELF. | For the entire execution of the program. | External | 0 |
+| `register`  | Block Scope | A register | Automatic | None | Indeterminate |
+| `static` | *Block scope* when used with an identifier present in a block; *File scope* when used with an identifier present globally in the file. | Static storage, typically `.data` (if initialized), or `.bss` (if uninitialized, or zero-initialized) in ELF. | For the entire execution of the program. | *None* for block-static and *Internal* for file-static identifiers. | 0 |
+| `extern` | N/A | Static storage, typically `.data` (if initialized), or `.bss` (if uninitialized, or zero-initialized) in ELF. | For the entire execution of the program. | External | N/A |
 
 ## Notes
 
-1. `auto` is implicit, which is why no one specifies it. Therefore, `{auto int x = 45;}` and `{int x = 45;}` are the same things.
-2. `register` is only a hint to the compiler. The compiler may still put the value in memory.
-3. When the compiler does use a register when hinted with `register`, the address of that identifier can not be taken, meaning (&) can not be used with it.
-4. The description of `extern` is not accurate because the situation of `extern` is quite complicated, so it is better discussed separately later.
+> 1. `register` is only a hint to the compiler. The compiler may still put the value in memory. Also, we can not use the "address of" operator (&) on such a declaration, as the object may or may not exist at a memory location.
+> 
+> 2. `extern` is slightly different from the rest of the specifiers. It is explored later.
 
----
 
-The table is loaded with information, and to understand it, we need a starting point.
+The table is loaded with information. To understand it, we need a starting point.
 
-A bare minimum declaration contains an identifier and its type. We can deduce where it is declared in by seeing the surrounding code. A declaration doesn't advertize any of the properties by itself. Therefore, the location of the declaration is the right starting point.
+A bare minimum declaration contains an identifier and its type. We can deduce where it is declared in by noticing the surrounding code. It doesn't advertise the aforementioned properties. Therefore, the location of the declaration is the right starting point.
 
 ## Block-level declaration
 
-An identifier declared inside a pair of curly-braces has block scope. Example: functions, if-else, loops, and unnamed blocks.
+An identifier declared inside a pair of curly-braces (functions, if-else, loops, and unnamed blocks, among others) has block scope.
 
-The default storage class for block scoped declarations is `auto`, which means "automatic storage". Usually it is stack, but it could be a register or completely optimized away by the compiler. As a result, the actual storage location depends on multiple things. In my observation, I have found two factors influencing it. They are program complexity and optimization level.
+The default storage class for block-scoped declarations is `auto`, which stands for "automatic storage". Usually it is stack, but it could be a register or completely optimized away by the compiler. The actual storage location depends on multiple things. In my observation, I have found two factors influencing it. They are **program complexity** and **optimization level**.
   - Program complexity directly affects the register pressure. A complicated program with multiple live values might force the compiler to use stack, as keeping values live in registers increases "register pressure".
   - If the code is simple enough, the compiler might use registers instead of stack at higher optimization levels (-O1 and beyond).
 
-The default behavior can be overridden with `static`. It increases the storage duration of the identifier, but its availability remains limited to the block it is defined in.
+`auto` is implicit, which is why no one specifies it. So, `{auto int x = 45;}` and `{int x = 45;}` are identical.
+
+The default behavior can be overridden with `static`. It increases the storage duration of the object, but the availability of its identifier remains limited to the block it is defined in.
 
 ---
 
-Therefore, identifiers declared in a block are available within that block only. Their lifetime, however, depends on their storage class. Once execution leaves the block, the lifetime of an ordinary automatic variable ends. This is true from the perspective of C. But to complete our understanding, we have to explore this from the perspective of assembly as well, which we will do in a moment.
+Therefore, identifiers declared in a block are available only within it. Their storage duration, however, depends on their storage class.
 
-It is reasonable to think that the storage associated with an automatic block scope identifier is discarded once execution leaves the block it is defined. This is not entirely true. To understand why, we have to understand the perspective of assembly, which we will do in a moment.
+It is reasonable to think that the storage associated with an automatic block-scoped object is discarded once execution leaves the block. It is not wrong, but it is incomplete. We will explore it from assembly's point of view to complete it.
 
-## File Scope and Program Scope
+## File Scope
 
-An identifier which is globally available within one translation unit is a file scoped declaration.
-
-An identifier which is globally available to all the translation units that constitute the program (the whole program, basically) is a program scoped (or, program-wide) declaration.
-
-By default, an identifier declared outside of all the functions is program scoped. To restrict it to the translation unit it is defined in, we can use the `static` specifier.
-
-In the example below, `pie1` has program-wide availability, while `pie2` is limited to its translation unit.
+An identifier declared outside of all the functions is a file-scoped declaration. For example, both `pi_1` and `pi_2` are file-scoped declarations here.
 ```c
-/* hello.c */
+/* math1.c */
 #include <stdio.h>
 
-float pie1 = 3.14;
-static float pie2 = 3.14;
+float pi_1 = 3.14;
+static float pi_2 = 3.14;
 
 int main(void);
 ```
 
-**Please note that the ISO/IEC 9889 standard doesn't define "program scope". I am using it as an intuitive term to convey the underlying idea.**
+As named, a file-scoped declaration is available within its translation unit only. However, it can be made globally available as well.
 
 ---
 
-We have not discussed `extern` here. We will do that soon.
+In the example above, `pi_1` is globally available and `pi_2` is local to its translation unit. Before going into the details, take this scenario.
+  - We have a file named `math2.c`. It wants to use `pi_1` declared in `math1.c`.
+  - How should `math2.c` communicate to the toolchain (gcc/clang) that it wants to use a variable defined in a different TU? The answer is `extern`.
+
+This is how `math2.c` will convey the toolchain.
+```c
+/* math2.c */
+#include <stdio.h>
+
+extern float pi_1;
+
+int main(void){
+  printf("%f\n", pi_1);
+}
+```
+  - The `extern` specifier tells the toolchain that this object is defined in a different translation unit.
+
+If you notice, a block-scoped object is available and accessible within its block; a file-static object is available and accessible within the TU. *While an object with external linkage is available across all the TUs, it is not accessible by default.*
+
+Apart from this, extern has another use case. Take this example:
+```c
+#include <stdio.h>
+
+int num = 10;
+
+int main(void){
+  int num = 20;
+  printf("%d\n", num);
+}
+```
+  - The answer is 20.
+
+What if I want to access the file-scoped one? Just remove the local one. But we can do one more thing.
+```c
+#include <stdio.h>
+
+int num = 10;
+
+int main(void){
+  extern int num;
+  printf("%d\n", num);
+}
+```
+
+That's why the `extern` storage class specifier feels slightly awkward. It is not similar to other storage classes.
+
+---
+
+It's time to explore the perspective of assembly. It is necessary as C is converted to assembly and both languages have different models to express the same intent. Exploring assembly will complete our mental model.
 
 ## Assembly Context
 
-Assembly doesn't have scopes the way C has. It has symbols and those symbols have a few properties including visibility and cross-file name resolution when the linker operates on object files generated from these assembly files. These are the properties that interest us.
+Assembly doesn't have scopes the way C has. It has symbols and those symbols have a few properties including **visibility** and **cross-file name resolution** when the linker operates on the object files generated from these assembly units. These are the properties that interest us.
 
-Symbol visibility and cross-file name resolution belong to a concept called **linkage**.
+To understand these properties, we have to understand **linkage**.
 
 **If I use one identifier across multiple translation units, do they refer to the same object, or different ones?** This is what linkage answers.
 
 There are three types of linkage: external, internal, and none.
-  - With external linkage, an identifier refers to the same object throughout the program (across all the TUs). An identifier with `extern` specifier has external linkage (STB_GLOBAL).
+  - With external linkage (STB_GLOBAL), an identifier refers to the same object throughout the program (across all the TUs).
   - Within one translation unit, each declaration of an identifier with internal linkage refers to the same object and it is visible within that TU only. An identifier with `static` storage class has internal linkage (STB_LOCAL), doesn't matter where it is declared in the file.
-  - Automatic variables have no linkage. **The why is unclear to me.** It maybe due to the fact that they cease to exist after the stack frame associated with them is released, so there is no point of assigning a linkage to them as they are transient given to the program's lifespan.
+  - Automatic variables have no linkage. **The why is unclear to me at this moment.** It maybe due to the fact that they cease to exist after the stack frame associated with them is released, so there is no point of assigning a linkage to them as they are transient given to the program's lifespan.
 
-We can notice that either a symbol is available to the whole program, or the assembly file it is defined in. So, program-wide availability can be associated with external linkage and file-scope availability with internal linkage. But there is no such thing as "block scope symbol" in assembly.
+Therefore, from the perspective of assembly, either a symbol is available to the whole program, or the assembly file it is defined in. But as we have discussed, `availability != accessibility`.
+  - A symbol has to be available to be accessible.
+  - If a symbol is available, it could still be inaccessible for some reason.
 
-If there is no block scope in assembly, how the compiler translates automatic storage and block-level availability of C objects? The simple answer is, when we use a toolchain like GCC or Clang, they control all the steps in the build process. They generate an assembly which conforms to the C language rules. Because the process is controlled end-to-end, there is no way an instruction is emitted that accesses a block scoped declaration outside of the intended code, unless the toolchain has a bug.
+---
 
-Does that mean I can stop gcc/clang after compilation, check if stack is used to store a block scoped variable and manipulate the assembly to access it outside its block while ensuring that the storage corresponding to the variable still exists and has not been reused?
-  - Absolutely. If the conditions were right, the program is likely to execute the intended way.
+We can also notice that there is no true block scope in assembly. Then how the compiler translates automatic storage and block-level availability of C objects?
+  - We use a toolchain like GCC or Clang to build a C source code.
+  - A toolchain controls all the steps in the build process. They generate an assembly which conforms to the C language rules.
+  - Since the process is controlled end-to-end, there is no way an instruction is emitted that accesses a block-scoped declaration outside of the equivalent assembly code, unless the toolchain has a bug.
 
-*Therefore, block scope availability of C identifiers in assembly is enforced by the toolchain, or the programmer writing assembly manually, as we would not like our variables getting accessed/modified outside of their intended place in the program.*
+Does that mean
+  - I can stop gcc/clang after compilation (or invoke the preprocessor and compiler manually and stop there),
+  - check if stack is used to store a block-scoped variable,
+  - if yes, then manipulate the assembly to access it outside its block while ensuring that the storage corresponding to the variable still exists and has not been reused, and
+  - expect it to run the intended way?
+
+Absolutely. If the conditions were right, the program is likely to execute the intended way.
+
+Isn't this problematic? It is. But as said, the toolchain controls all the steps. As long as it is not buggy, it should not be a problem. Moreover, if we write assembly manually, we are likely to exhibit similar behavior, as accessing a variable outside of its intended scope could be problematic.
 
 ---
 
@@ -128,33 +192,6 @@ It is reasonable to ask why the compiler doesn't do what a programmer can do man
   - Adjusting the stack pointer may not be an expensive operation, but when done repeatedly may induce unintended effects on the performance.
   - To adjust rsp after each block, the compiler has to keep track of the total allocation size in every block.
   - Dynamic stack allocation, or VLAs, further complicates this.
-
-## extern
-
-**Note: I am not confident about this section. I expect corrections from people with more experience.**
-
-I am not able to understand how should I perceive `extern`.
-
-This is what the c-std says in point 5, on page 36, under section 6.2.2 Linkages of identifiers.
-```
-If the declaration of an identifier for an object has file scope and
-does not contain the storage-class specifier static or constexpr, its 
-linkage is external.
-```
-
-`{auto int x = 4;}` and `{int x = 4;}` are exactly the same things. However, x1 and x2 in the example below aren't.
-```c
-#include <stdio.h>
-
-int x1;
-extern int x2;
-
-int main(void);
-```
-  - `x1` is an identifier that is globally available (external linkage) in all the TUs that constitute the final program.
-  - `x2` is an identifier that is declared in a different TU. To use it in this TU, we have to sort of redeclare it with `extern` in this TU. The `extern` tells the compiler it is a symbol with external linkage defined somewhere, so don't create a new symbol.
-
-The usage of `extern` doesn't match with `auto` or `static`. It is not implicitly available, unlike `auto`.
 
 ## Things I have not covered.
 
