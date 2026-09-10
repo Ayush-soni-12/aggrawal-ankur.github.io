@@ -60,7 +60,6 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 
 <PageLayout meta={meta}>
 	<section class="about" aria-labelledby="about-label">
-		<div class="section-label" id="about-label">About</div>
 		{
 			profile?.avatar && (
 				<div class="avatar-wrap">
@@ -68,13 +67,14 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 						src={profile.avatar}
 						alt={authorName}
 						class="author-avatar"
-						width="96"
-						height="96"
+						width="104"
+						height="104"
 						loading="eager"
 					/>
 				</div>
 			)
 		}
+		<div class="section-label" id="about-label">About</div>
 		<div class="bio">
 			<Content />
 		</div>
@@ -86,22 +86,27 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 		margin-bottom: 64px;
 	}
 	.avatar-wrap {
-		margin-bottom: 28px;
-		display: block;
+		margin-bottom: 32px;
+		display: flex;
+		justify-content: center;
+		margin-left: -100px;
+		align-item: center;
 	}
 	.author-avatar {
-		width: 96px;
-		height: 96px;
+		width: 104px;
+		height: 104px;
 		border-radius: 50%;
 		object-fit: cover;
-		border: 1.5px solid var(--hairline);
+		padding: 3px;
+		border: 2px solid hsl(var(--theme-accent) / 0.45);
 		background-color: var(--paper);
-		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-		transition: border-color 0.25s ease, transform 0.25s ease;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--hairline);
+		transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 	}
 	.author-avatar:hover {
 		border-color: hsl(var(--theme-accent));
 		transform: scale(1.03);
+		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px hsl(var(--theme-accent) / 0.6);
 	}
 	.bio {
 		font-family: var(--font-serif);
