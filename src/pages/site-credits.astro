@@ -119,30 +119,38 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 		color: hsl(var(--theme-text-muted));
 		font-size: 18px;
 		line-height: 1.65;
-		white-space: pre-line;
 		max-width: var(--reading-width);
 	}
-	.bio :global(blockquote p) {
+	.bio :global(blockquote > p) {
+		white-space: pre-line;
 		margin: 0 0 10px;
 		font-size: inherit;
 		max-width: none;
 	}
-	.bio :global(blockquote > :last-child),
-	.bio :global(blockquote p:last-child),
-	.bio :global(blockquote ul:last-child),
-	.bio :global(blockquote ol:last-child) {
-		margin-bottom: 0;
-	}
 	.bio :global(blockquote ul),
 	.bio :global(blockquote ol) {
-		margin: 8px 0 0;
-		padding: 0;
+		white-space: normal;
+		margin: 8px 0 10px;
+		padding-left: 20px;
 	}
 	.bio :global(blockquote li) {
 		margin-bottom: 4px;
+		white-space: normal;
 	}
-	.bio :global(blockquote li:last-child) {
-		margin-bottom: 0;
+	.bio :global(blockquote li > p) {
+		margin: 0;
+		display: inline;
+		white-space: normal;
+	}
+	.bio :global(blockquote > :last-child),
+	.bio :global(blockquote > p:last-child),
+	.bio :global(blockquote > ul:last-child),
+	.bio :global(blockquote > ol:last-child),
+	.bio :global(blockquote ul:last-child),
+	.bio :global(blockquote ol:last-child),
+	.bio :global(blockquote li:last-child),
+	.bio :global(blockquote li:last-child > :last-child) {
+		margin-bottom: 0 !important;
 	}
 	.bio :global(table) {
 		width: 100%;

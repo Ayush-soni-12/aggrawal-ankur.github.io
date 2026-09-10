@@ -454,6 +454,60 @@ ul.work-list a:focus-visible {
 	}
 }
 
+/* Blockquotes — global styling across all pages, posts, and drafts */
+blockquote {
+	margin: 28px 0;
+	padding: 4px 0 4px 22px;
+	border-left: 2px solid hsl(var(--theme-accent));
+	color: hsl(var(--theme-text-muted));
+	font-size: 18px;
+	line-height: 1.65;
+	max-width: var(--reading-width);
+}
+blockquote > p {
+	white-space: pre-line;
+	margin: 0 0 10px;
+	font-size: inherit;
+	max-width: none;
+}
+blockquote ul,
+blockquote ol {
+	white-space: normal;
+	margin: 8px 0 10px;
+	padding-left: 20px;
+}
+blockquote ul {
+	list-style: disc;
+}
+blockquote ol {
+	list-style: decimal;
+}
+blockquote li {
+	margin-bottom: 4px;
+	white-space: normal;
+}
+blockquote li > p {
+	margin: 0;
+	display: inline;
+	white-space: normal;
+}
+blockquote > :last-child,
+blockquote > p:last-child,
+blockquote > ul:last-child,
+blockquote > ol:last-child,
+blockquote ul:last-child,
+blockquote ol:last-child,
+blockquote li:last-child,
+blockquote li:last-child > :last-child {
+	margin-bottom: 0 !important;
+}
+@media (max-width: 420px) {
+	blockquote {
+		padding-left: 16px;
+		font-size: 16.5px;
+	}
+}
+
 /* Stagger entry: items set --i inline; nth-child rules cover the rest. */
 @media (prefers-reduced-motion: no-preference) {
 	@keyframes intro-fade-up {
