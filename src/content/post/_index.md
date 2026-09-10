@@ -8,9 +8,7 @@ tags: [ c-to-asm ]
 
 ## Note for the readers
 
-***This writing uses intuitive definitions to understand this topic. Some terminology may not be formally specified by the official C standard, in which case, it is clearly mentioned.***
-
-***This writing is based on the ISO/IEC 9889:2024 (C23) draft.***
+***This writing is based on the ISO/IEC 9889:2024 (C23) draft. It uses intuitive definitions to understand this topic.***
 
 ***This is a complex topic with edge cases. If you think that a fact is inaccurately represented, or the writing doesn't uphold the standards it is claiming, the author warmly welcomes all the suggestions and corrections. The communication can be done via Email, LinkedIn, or GitHub Discussions.***
 
@@ -211,7 +209,13 @@ The flags are used to generate a clean assembly:
   - `-fno-asynchronous-unwind-tables` disables the generation of the .eh_frame section in the binary.
   - `-fno-dwarf2-cfi-asm` tells the compiler to omit DWARF2 Call Frame Information (CFI) assembler directives (.cfi_startproc, .cfi_endproc, etc.).
 
+**Note: I have used whitespaces and empty newlines to improve the readability of the assembly output. The content remains unchanged.**
+
 ### #1. Automatic Storage
+
+**Expectations**:
+	- At -O1, the compiler should preserve the exact semantics (stack storage).
+	- At -O2, the compiler should optimize as the logic is very simple (register).
 
 ```c
 #include <stdio.h>
@@ -276,7 +280,7 @@ main:
 
 ### #2. Register
 
-**Expectation**: We can not uses the "address of" operator on a variable with the register storage class.
+**Expectation**: We can not use the "address of" operator on a variable with the register storage class, doesn't matter if it got storage on stack or a register.
 ```c
 #include <stdio.h>
 
@@ -286,8 +290,8 @@ int main(void){
 }
 ```
 
-Output of compilation:
-```
+Output:
+```bash
 test.c: In function ‘main’:
 test.c:5:3: error: address of register variable ‘num’ requested
     5 |   printf("num %p\n", &num);
@@ -317,7 +321,6 @@ Generated assembly:
 	.text
 	.globl main
 	.type	 main, @function
-
 main:
 	push rbp
 	mov  rbp, rsp
@@ -342,13 +345,17 @@ The output:
 num (without an initializer): 0
 ```
 
-[INSERT an explanation of .local and .comm directives]
+Explanation of the directives:
+  - `.local` is GAS directive used to create a symbol local to the assembly unit with the following syntax: `.local sym_name`
+  - `.comm` reserves uninitialized common storage for a symbol with the following syntax: `.comm buffer, size_bytes, alignment`
 
-Why there is no `.section .bss`? That requires section switching. [EXPLAIN THIS].
+Questions.
+	1. Why there is no `.section .bss`? The compiler has multiple ways to reserve memory in `.bss`. The compiler might prefer one over the other given the priorities. Discussing this is out-of-scope of this writing.
+	2. Why `num` is changed to `num.0`? It prevents "duplicate symbol error" when variables with identical names in different blocks are given static storage. For example, both `foo()` and `bar()` declaring a `static int count;`. Again, discussing that is out-of-scope f this writing.
 
 ### #4. Initialized Block Statics
 
-**Expectation**: `num` will be given storage in the .data section and initialized with 45.
+**Expectation**: `num` will be given storage in the `.data` section and initialized with 45.
 ```c
 #include <stdio.h>
 
@@ -374,11 +381,9 @@ num.0:
 	.long	45
 ```
 
-Why .data is present here? No segment switching? [EXPLANATION]
-
 ### #5. Zero-initialized Block Statics
 
-**Expectation**: `num` will be given storage in the .bss section as it is zero-initialized.
+**Expectation**: `num` will be given storage in the `.bss` section as it is zero-initialized.
 
 Compile both the files.
 ```c
@@ -398,8 +403,7 @@ int main(void){
   static int num = 0;
 }
 ```
-
-The output will be exactly the same. Use `diff` if you want.
+  - The output will be identical, except the filename, of course. Use `diff` to double check.
 
 This is the assembly:
 ```nasm
@@ -410,11 +414,16 @@ main:
 	pop  rbp
 	ret
 
-	.local	num.0
-	.comm	num.0, 4, 4
+	.local num.0
+	.comm  num.0, 4, 4
 ```
 
 ### #6. Symbol Visibility
+
+**Expectations**:
+	- num1: Global
+	- num2: Local
+	- num3: No visibility
 
 ```c
 #include <stdio.h>
@@ -428,8 +437,9 @@ int main(void){
 }
 ```
 
+Use `readelf` to inspect symbol information in the generated binary.
 ```bash
-→ readelf test -s | grep num 
+→ readelf main -s | grep num 
    Num:    Value          Size Type    Bind   Vis      Ndx Name
     12: 0000000000004020     4 OBJECT  LOCAL  DEFAULT   25 num2
     29: 000000000000401c     4 OBJECT  GLOBAL DEFAULT   25 num1
