@@ -1,7 +1,7 @@
 ---
 import PostList from "@/components/blog/PostList.astro";
 import { getAllPosts, getPostSortDate, sortMDByDate } from "@/data/post";
-import { showcase } from "@/data/showcase";
+import { formatShowcaseTimeline, showcase } from "@/data/showcase";
 import PageLayout from "@/layouts/Base.astro";
 import { siteConfig } from "@/site-config";
 import { formatRailDate, formatStampDate } from "@/utils/date";
@@ -137,11 +137,20 @@ if (profile?.email) {
 					<li style={`--i: ${idx + 1}`}>
 						<a href={item.href} rel="noreferrer" target="_blank">
 							<div class="head">
-								<span class="name">{item.name}</span>
-								<span class="stack">{item.stack}</span>
-								{item.badge && <span class="badge">{item.badge}</span>}
+								<div class="head-left">
+									<span class="name">{item.name}</span>
+									<span class="stack">{item.stack}</span>
+								</div>
+								<div class="head-right">
+									{item.badge && <span class="badge">{item.badge}</span>}
+									{item.startDate && item.endDate && (
+										<span class="timeline-range">
+											{formatShowcaseTimeline(item.startDate, item.endDate)}
+										</span>
+									)}
+								</div>
 							</div>
-							<p>{item.desc}</p>
+							<p class="desc">{item.desc}</p>
 						</a>
 					</li>
 				))}

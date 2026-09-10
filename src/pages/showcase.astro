@@ -39,16 +39,20 @@ const siteUrl = (path: string) => new URL(path, Astro.site).toString();
 					<li>
 						<a href={item.href} rel="noreferrer" target="_blank">
 							<div class="head">
-								<span class="name">{item.name}</span>
-								<span class="stack">{item.stack}</span>
-								{item.badge && <span class="badge">{item.badge}</span>}
-							</div>
-							{item.startDate && item.endDate && (
-								<div class="timeline-range">
-									{formatShowcaseTimeline(item.startDate, item.endDate)}
+								<div class="head-left">
+									<span class="name">{item.name}</span>
+									<span class="stack">{item.stack}</span>
 								</div>
-							)}
-							<p>{item.desc}</p>
+								<div class="head-right">
+									{item.badge && <span class="badge">{item.badge}</span>}
+									{item.startDate && item.endDate && (
+										<span class="timeline-range">
+											{formatShowcaseTimeline(item.startDate, item.endDate)}
+										</span>
+									)}
+								</div>
+							</div>
+							<p class="desc">{item.desc}</p>
 						</a>
 					</li>
 				))
