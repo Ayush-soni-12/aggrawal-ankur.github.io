@@ -31,13 +31,11 @@ Below is a list of the changes made to this site, along with the commit where ea
 You can check out their work here:
 
 > Anjay Goel
-> 
 > [GitHub ↗](https://github.com/anjay-goel/) · [LinkedIn ↗](https://www.linkedin.com/in/anjaygoel/) · [Personal Site ↗](https://anjay.sh/)
 
 
-> Ayush Soni 
-> 
-> [GitHub ↗](https://github.com/username) · [LinkedIn ↗](https://www.linkedin.com/in/ayush-soni-093384242/)
+> Ayush Soni
+> [GitHub ↗](https://github.com/Ayush-soni-12/) · [LinkedIn ↗](https://www.linkedin.com/in/ayush-soni-093384242/)
 
 
 This page exists simply to acknowledge the people whose work made this site possible, and to make clear which parts of it are original and which have been changed for my use.

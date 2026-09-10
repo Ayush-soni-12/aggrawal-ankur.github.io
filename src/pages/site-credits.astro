@@ -119,14 +119,29 @@ const avatarUrl = profile?.avatar ? absoluteUrl(profile.avatar, Astro.site) : un
 		color: hsl(var(--theme-text-muted));
 		font-size: 18px;
 		line-height: 1.65;
+		white-space: pre-line;
 		max-width: var(--reading-width);
 	}
 	.bio :global(blockquote p) {
-		margin: 0 0 12px;
+		margin: 0 0 10px;
 		font-size: inherit;
 		max-width: none;
 	}
-	.bio :global(blockquote p:last-child) {
+	.bio :global(blockquote > :last-child),
+	.bio :global(blockquote p:last-child),
+	.bio :global(blockquote ul:last-child),
+	.bio :global(blockquote ol:last-child) {
+		margin-bottom: 0;
+	}
+	.bio :global(blockquote ul),
+	.bio :global(blockquote ol) {
+		margin: 8px 0 0;
+		padding: 0;
+	}
+	.bio :global(blockquote li) {
+		margin-bottom: 4px;
+	}
+	.bio :global(blockquote li:last-child) {
 		margin-bottom: 0;
 	}
 	.bio :global(table) {
